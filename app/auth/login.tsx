@@ -1,4 +1,3 @@
-// app/(auth)/login.tsx
 import { router } from 'expo-router'; // IMPORTANT: Use 'router' for navigation
 import { Formik } from 'formik';
 import React, { useState } from 'react';

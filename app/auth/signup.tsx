@@ -1,5 +1,4 @@
-// app/(auth)/signup.tsx
-import { router } from 'expo-router'; // IMPORTANT: Use 'router' for navigation
+import { router } from 'expo-router';
 import { Formik } from 'formik';
 import React, { useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
