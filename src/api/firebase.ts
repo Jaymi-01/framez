@@ -151,23 +151,42 @@ export const createPost = async (
   text: string, 
   imageUri?: string
 ): Promise<void> => {
+  console.log("📝 Creating post...");
+  console.log("User ID:", userId);
+  console.log("User Name:", userName);
+  console.log("Has image:", !!imageUri);
+  
   let imageUrl: string | undefined;
 
   // Upload image to Cloudinary if provided
   if (imageUri) {
+    console.log("📸 Uploading image...");
     imageUrl = await uploadImage(imageUri);
+    console.log("✅ Image uploaded:", imageUrl);
   }
 
   // Create Firestore document
+  console.log("💾 Saving to Firestore...");
   const postsRef = collection(db, 'posts');
-  await addDoc(postsRef, {
+  
+  const postData = {
     userId,
     userName,
     userEmail,
     text,
     imageUrl: imageUrl || null,
     timestamp: serverTimestamp(),
-  });
+  };
+  
+  console.log("Post data:", postData);
+  
+  try {
+    const docRef = await addDoc(postsRef, postData);
+    console.log("✅ Post created with ID:", docRef.id);
+  } catch (error) {
+    console.error("❌ Firestore error:", error);
+    throw error;
+  }
 };
 
 
