@@ -3,10 +3,6 @@ import { createUserWithEmailAndPassword, User as FirebaseAuthUser, getAuth, sign
 import { addDoc, collection, getDocs, getFirestore, orderBy, query, serverTimestamp, where } from 'firebase/firestore';
 import { Post } from '../types/types';
 
-// =======================================================
-// 1. CONFIGURATION
-// =======================================================
-
 const firebaseConfig = {
   apiKey: "AIzaSyDvEdnCw5K7mmJwC6GNje8-b1syHwge-5M", 
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -20,18 +16,11 @@ const firebaseConfig = {
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = "framez"; // Must match your Cloudinary unsigned preset name
 
-// =======================================================
-// 2. INITIALIZATION AND EXPORTS
-// =======================================================
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// =======================================================
-// 3. AUTHENTICATION HELPERS
-// =======================================================
 
 /**
  * Registers a new user with Firebase Auth and sets their display name.
@@ -70,15 +59,6 @@ export const updateUserProfile = async (data: { photoURL: string | null }): Prom
 };
 
 
-// =======================================================
-// 4. POST MANAGEMENT & CLOUDINARY STORAGE
-// =======================================================
-
-/**
- * Uploads a local image file URI to Cloudinary and returns the public URL.
- * Uses unsigned upload (no API key required).
- * Supports both Web and Mobile platforms.
- */
 const uploadImage = async (uri: string): Promise<string> => {
   // DEBUG: Log environment variables
   console.log("🔍 CLOUD_NAME:", CLOUD_NAME);
