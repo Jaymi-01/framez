@@ -1,50 +1,213 @@
-# Welcome to your Expo app 👋
+# Framez 📸
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern social media application built with React Native and Expo, where users can share their moments through images and text posts.
 
-## Get started
+## Features ✨
 
-1. Install dependencies
+- **User Authentication** - Secure signup and login with Firebase Authentication
+- **Create Posts** - Share images with captions (images stored on Cloudinary)
+- **Feed** - View all posts from users in chronological order
+- **Profile Management** - Customize your profile with pre-selected avatars
+- **Auto-refresh** - Seamless updates when navigating between screens
+- **Responsive Design** - Works on web, iOS, and Android
 
+## Tech Stack 🛠️
+
+- **Frontend**: React Native (Expo)
+- **Authentication**: Firebase Authentication
+- **Database**: Firebase Firestore
+- **Image Storage**: Cloudinary
+- **Navigation**: Expo Router
+- **Language**: TypeScript
+
+## Prerequisites 📋
+
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (v16 or higher)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- A Firebase account
+- A Cloudinary account
+
+## Installation 🚀
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/jaymi-01/framez.git
+   cd framez
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```bash
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+   EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   ```
 
+4. **Configure Firebase**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project or use existing one
+   - Enable **Authentication** (Email/Password)
+   - Create a **Firestore Database**
+   - Set up Firestore security rules:
+     ```javascript
+     rules_version = '2';
+     service cloud.firestore {
+       match /databases/{database}/documents {
+         match /{document=**} {
+           allow read, write: if request.auth != null; 
+         }
+       }
+     }
+     ```
+
+5. **Configure Cloudinary**
+   - Go to [Cloudinary Dashboard](https://cloudinary.com/console)
+   - Navigate to **Settings** → **Upload** → **Upload presets**
+   - Create an **unsigned** upload preset named `framez`
+   - Note your **Cloud Name** for the `.env` file
+
+6. **Start the development server**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Running the App 📱
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+After starting the development server:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Web**: Press `w` in the terminal
+- **iOS Simulator**: Press `i` (requires Xcode on macOS)
+- **Android Emulator**: Press `a` (requires Android Studio)
+- **Physical Device**: Scan QR code with Expo Go app
 
-## Get a fresh project
+## Project Structure 📁
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+framez/
+├── app/
+│   ├── (tabs)/          # Tab navigation screens
+│   │   ├── index.tsx    # Feed/Home screen
+│   │   ├── newPost.tsx  # Create new post screen
+│   │   └── profile.tsx  # User profile screen
+│   ├── auth/            # Authentication screens
+│   │   ├── login.tsx
+│   │   └── signup.tsx
+│   └── _layout.tsx      # Root layout
+├── src/
+│   ├── api/
+│   │   └── firebase.ts  # Firebase configuration & API calls
+│   ├── components/
+│   │   ├── common/      # Reusable components
+│   │   └── posts/       # Post-related components
+│   ├── context/
+│   │   └── AuthContext.tsx  # Authentication context
+│   ├── theme/
+│   │   └── colors.ts    # App color scheme
+│   └── types/
+│       └── types.ts     # TypeScript type definitions
+├── .env                 # Environment variables (not in repo)
+└── package.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Features in Detail 🔍
 
-## Learn more
+### Authentication
+- Email and password-based signup/login
+- Display name registration
+- Automatic session persistence
+- Secure logout
 
-To learn more about developing your project with Expo, look at the following resources:
+### Posts
+- Upload images from device gallery
+- Add text captions
+- View posts in chronological feed
+- See post author information with timestamps
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Profile
+- View your post count and likes
+- Customize profile picture from pre-selected avatars
+- View all your posts in one place
+- Persistent profile picture across sessions
 
-## Join the community
+## Environment Variables 🔐
 
-Join our community of developers creating universal apps.
+| Variable | Description |
+|----------|-------------|
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase project API key |
+| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase authentication domain |
+| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
+| `EXPO_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
+| `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Building for Production 🏗️
+
+### Android
+```bash
+eas build --platform android
+```
+
+### iOS
+```bash
+eas build --platform ios
+```
+
+### Web
+```bash
+npx expo export:web
+```
+
+## Troubleshooting 🔧
+
+**Issue**: Images not uploading
+- Ensure Cloudinary upload preset is set to **unsigned**
+- Verify `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` is correct
+- Check console for specific error messages
+
+**Issue**: Posts not appearing
+- Check Firebase security rules allow authenticated reads/writes
+- Verify all Firebase environment variables are set correctly
+- Clear cache: `npx expo start --clear`
+
+**Issue**: Authentication failing
+- Ensure Firebase Authentication is enabled in Firebase Console
+- Verify Email/Password provider is enabled
+- Check that all Firebase environment variables are correct
+
+## Future Enhancements 🚀
+
+- [ ] Comment system
+- [ ] Follow/unfollow users
+- [ ] Real-time notifications
+- [ ] Direct messaging
+- [ ] Story/reels feature
+- [ ] Search functionality
+- [ ] Hashtag support
+- [ ] Dark mode
+
+## Contributing 🤝
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+Made with ❤️ by [Your Name]
