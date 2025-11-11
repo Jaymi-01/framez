@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = "framez"; // Must match your Cloudinary unsigned preset name
+const UPLOAD_PRESET = "framez"; 
 
 
 const app = initializeApp(firebaseConfig);
@@ -42,7 +42,6 @@ export const logoutUser = async (): Promise<void> => {
 export const updateUserProfile = async (data: { photoURL: string | null }): Promise<void> => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-        // This is the correct way to update the user's photoURL visible in the Auth object.
         await updateProfile(currentUser, { photoURL: data.photoURL });
     } else {
         throw new Error("No authenticated user found.");
@@ -145,7 +144,6 @@ export const fetchAllPosts = async (): Promise<Post[]> => {
 
 export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
     const postsRef = collection(db, 'posts');
-    // Query only by userId (removing the problematic orderBy)
     const q = query(postsRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
 
