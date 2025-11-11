@@ -199,15 +199,8 @@ npx expo export:web
 - [ ] Hashtag support
 - [ ] Dark mode
 
-## Contributing 🤝
+## LINK TO MY VIDEO DEMO
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+https://drive.google.com/drive/folders/1Hp8uY9hdCsJMREq6Xn_0JGwJmqjmOv08?usp=drive_link
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-
-Made with ❤️ by [Your Name]
+Made with ❤️ by Jaymi.
