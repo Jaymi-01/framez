@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import Constants from 'expo-constants';
 import { initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, User as FirebaseAuthUser, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
@@ -7,22 +8,20 @@ import { Post } from '../types/types';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDvEdnCw5K7mmJwC6GNje8-b1syHwge-5M", 
-    authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+    authDomain: Constants.expoConfig?.extra?.firebaseAuthDomain || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: Constants.expoConfig?.extra?.firebaseProjectId || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: Constants.expoConfig?.extra?.firebaseStorageBucket || process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: Constants.expoConfig?.extra?.firebaseMessagingSenderId || process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: Constants.expoConfig?.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = "framez"; 
-
+const CLOUD_NAME = Constants.expoConfig?.extra?.cloudinaryCloudName || process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = Constants.expoConfig?.extra?.cloudinaryUploadPreset || "framez";
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
 
 export const registerUser = async (email: string, password: string, displayName: string): Promise<FirebaseAuthUser> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -43,11 +42,34 @@ export const updateUserProfile = async (data: { photoURL: string | null }): Prom
     const currentUser = auth.currentUser;
     if (currentUser) {
         await updateProfile(currentUser, { photoURL: data.photoURL });
+        
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: data.photoURL,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
     } else {
         throw new Error("No authenticated user found.");
     }
 };
 
+export const getUserProfile = async (uid: string): Promise<{ photoURL: string | null } | null> => {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+            return userSnap.data() as { photoURL: string | null };
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+    }
+};
 
 const uploadImage = async (uri: string): Promise<string> => {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
@@ -65,7 +87,6 @@ const uploadImage = async (uri: string): Promise<string> => {
             const response = await fetch(uri);
             const blob = await response.blob();
             formData.append('file', blob as any); 
-
         } else {
             const base64Image = await FileSystem.readAsStringAsync(uri, {
                 encoding: 'base64', 
@@ -104,7 +125,6 @@ export const createPost = async (
     text: string, 
     imageUri?: string
 ): Promise<void> => {
-    
     let imageUrl: string | undefined;
 
     if (imageUri) {
@@ -165,7 +185,6 @@ export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
 
     return posts;
 };
-
 
 export const toggleLike = async (userId: string, postId: string, isLiked: boolean): Promise<void> => {
     const likeRef = doc(db, 'likes', `${postId}_${userId}`);
