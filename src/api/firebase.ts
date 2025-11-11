@@ -1,6 +1,8 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import { initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, User as FirebaseAuthUser, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { addDoc, collection, getDocs, getFirestore, orderBy, query, serverTimestamp, where } from 'firebase/firestore';
+import { Platform } from 'react-native';
 import { Post } from '../types/types';
 
 const firebaseConfig = {
@@ -28,13 +30,11 @@ export const registerUser = async (email: string, password: string, displayName:
     return userCredential.user;
 };
 
-// Logs in an existing user.
 export const loginUser = async (email: string, password: string): Promise<FirebaseAuthUser> => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
 };
 
-// Logs out an existing user.
 export const logoutUser = async (): Promise<void> => {
     await signOut(auth);
 };
@@ -56,23 +56,31 @@ const uploadImage = async (uri: string): Promise<string> => {
         );
     }
 
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+    const formData = new FormData();
+    formData.append('upload_preset', UPLOAD_PRESET);
+
     try {
-        const formData = new FormData();
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-        
-        const fileExtension = uri.split('.').pop() || 'jpg';
-        
-        formData.append('file', {
-            uri: uri,
-            type: `image/${fileExtension}`,
-            name: `upload.${fileExtension}`,
-        } as any);
-        
-        formData.append('upload_preset', UPLOAD_PRESET);
+        if (Platform.OS === 'web') {
+            // WEB FIX: Convert the blob URI into a Blob object for Cloudinary
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            // Append the actual Blob object, which Cloudinary's API can read.
+            formData.append('file', blob);
+
+        } else {
+            // MOBILE FIX: Use the reliable Base64 encoding method (requires FileSystem/legacy)
+            const base64Image = await FileSystem.readAsStringAsync(uri, {
+                encoding: 'base64', 
+            });
+            formData.append('file', `data:image/jpeg;base64,${base64Image}`);
+        }
         
         const response = await fetch(uploadUrl, {
             method: 'POST',
             body: formData,
+            headers: {
+            }
         });
 
         const data = await response.json();
@@ -102,6 +110,7 @@ export const createPost = async (
 ): Promise<void> => {
     
     let imageUrl: string | undefined;
+
     if (imageUri) {
         imageUrl = await uploadImage(imageUri);
     }
