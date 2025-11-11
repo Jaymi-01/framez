@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,12 +20,12 @@ import { COLORS } from "../../src/theme/colors";
 import { Post } from "../../src/types/types";
 
 const PROFILE_PICTURES = [
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779681/bc110031-06a7-460a-bf9c-545e5e896824_ghugru.jpg",
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779678/356306451_54b19ada-d53e-4ee9-8882-9dfed1bf1396_iv8jlz.jpg",
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779676/bc9fd4bd-de9b-4555-976c-8360576c6708_gspd7g.jpg",
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779678/27f3d5b2-1059-4123-848b-9ac484af7ae8_i6ujan.jpg",
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779677/4f357b16-1614-45a5-b043-2709189af2cf_rifs2v.jpg",
-  "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779677/1e59f641-d568-4f4a-8fff-922da4c45c10_bal312.jpg",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar1.png",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar2.png",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar3.png",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar4.png",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar5.png",
+  "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar6.png",
 ];
 
 export default function ProfileScreen() {
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
 
   const loadUserPosts = useCallback(async () => {
     if (!user) return;
+    setLoading(true);
     try {
       const posts = await fetchUserPosts(user.uid);
       setUserPosts(posts);
@@ -46,9 +48,11 @@ export default function ProfileScreen() {
     }
   }, [user]);
 
-  useEffect(() => {
-    loadUserPosts();
-  }, [loadUserPosts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadUserPosts();
+    }, [loadUserPosts])
+  );
 
   const handleLogout = async () => {
     try {
@@ -60,7 +64,7 @@ export default function ProfileScreen() {
 
   const handleSelectPicture = async (pictureUrl: string) => {
     try {
-      setSelectedPicture(pictureUrl);
+       setSelectedPicture(pictureUrl);
       setShowPicturePicker(false);
       Alert.alert("Success", "Profile picture updated!");
     } catch (error) {
@@ -141,7 +145,6 @@ export default function ProfileScreen() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
-
       <Modal
         visible={showPicturePicker}
         transparent
