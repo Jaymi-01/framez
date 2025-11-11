@@ -2,29 +2,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import { auth, fetchUserPosts, updateUserProfile } from "../../src/api/firebase";
+import { auth, countUserTotalLikes, fetchUserPosts, updateUserProfile } from "../../src/api/firebase";
 import { AppButton } from "../../src/components/common/AppButton";
 import { PostCard } from "../../src/components/posts/PostCard";
 import { useAuth } from "../../src/context/AuthContext";
 import { COLORS } from "../../src/theme/colors";
 import { Post } from "../../src/types/types";
 
-// NOTE: Please REPLACE these with your actual working Cloudinary URLs.
 const PROFILE_PICTURES = [
     "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779681/bc110031-06a7-460a-bf9c-545e5e896824_ghugru.jpg",
     "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779678/356306451_54b19ada-d53e-4ee9-8882-9dfed1bf1396_iv8jlz.jpg",
     "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779676/bc9fd4bd-de9b-4555-976c-8360576c6708_gspd7g.jpg",
-    "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779678/27f3d5b2-1059-4123-848b-9ac484af7ae8_i6ujan.jpg",
+    "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779678/27f3d5b2-1059-4123-848b-9ac4844aff7ae8_i6ujan.jpg",
     "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779677/4f357b16-1614-45a5-b043-2709189af2cf_rifs2v.jpg",
     "https://res.cloudinary.com/dquzcqxcy/image/upload/v1762779677/1e59f641-d568-4f4a-8fff-922da4c45c10_bal312.jpg",
 ];
@@ -33,24 +32,27 @@ export default function ProfileScreen() {
     const { user, logout } = useAuth();
     const [userPosts, setUserPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [totalLikes, setTotalLikes] = useState(0); // New state for Total Likes
     const [showPicturePicker, setShowPicturePicker] = useState(false);
     
-    // We rely entirely on the user object for the picture URL
-
     const loadUserPosts = useCallback(async () => {
         if (!user) return;
         setLoading(true);
         try {
             const posts = await fetchUserPosts(user.uid);
             setUserPosts(posts);
+            
+            // Fetch total likes after posts are loaded
+            const likesCount = await countUserTotalLikes(user.uid);
+            setTotalLikes(likesCount);
+
         } catch (_error) {
-            console.error("Error fetching user posts:", _error);
+            console.error("Error fetching profile data:", _error);
         } finally {
             setLoading(false);
         }
     }, [user]);
 
-    // FIX 1: Refresh posts when screen comes into focus (fixes post count/display)
     useFocusEffect(
         useCallback(() => {
             loadUserPosts();
@@ -67,17 +69,14 @@ export default function ProfileScreen() {
 
     const handleSelectPicture = async (pictureUrl: string) => {
         try {
-            // Call the API function to save the photoURL to Firebase Auth
             await updateUserProfile({ photoURL: pictureUrl });
 
-            // FIX C: Manually trigger user reload to update the AuthContext state immediately
             if (auth.currentUser) {
                 await auth.currentUser.reload();
             }
 
             setShowPicturePicker(false);
             Alert.alert("Success", "Profile picture updated!");
-            // The AuthContext useEffect listener will now fire and update the 'user' object globally.
         } catch (_error) {
             console.error("Failed to update profile picture:", _error);
             Alert.alert("Error", "Failed to update profile picture. Check console.");
@@ -88,8 +87,6 @@ export default function ProfileScreen() {
         return null;
     }
 
-    // FIX 3: Display Name logic is now correct due to FIX B in AuthContext
-    // This prioritizes the saved name (which is now correctly saved in AuthContext)
     const displayName = user.displayName || user.email?.split('@')[0] || "User";
     const finalProfilePicture = user.photoURL; 
 
@@ -120,13 +117,15 @@ export default function ProfileScreen() {
             <Text style={styles.email}>{user.email}</Text>
 
             <View style={styles.statsContainer}>
+                {/* Display Posts Count */}
                 <View style={styles.statBox}>
                     <Text style={styles.statCount}>{userPosts.length}</Text>
                     <Text style={styles.statLabel}>Frames</Text>
                 </View>
+                {/* Display Total Likes Count */}
                 <View style={styles.statBox}>
-                    <Text style={styles.statCount}>0</Text>
-                    <Text style={styles.statLabel}>Followers</Text>
+                    <Text style={styles.statCount}>{totalLikes}</Text>
+                    <Text style={styles.statLabel}>Total Likes</Text>
                 </View>
             </View>
 
@@ -160,7 +159,6 @@ export default function ProfileScreen() {
                 />
             )}
 
-            {/* Profile Picture Picker Modal */}
             <Modal
                 visible={showPicturePicker}
                 transparent
