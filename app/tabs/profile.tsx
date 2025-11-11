@@ -1,24 +1,27 @@
+// app/tabs/profile.tsx
+
+import React, { useCallback, useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Image,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { fetchUserPosts } from "../../src/api/firebase";
+import { fetchUserPosts, getUserProfile, updateUserProfile } from "../../src/api/firebase";
 import { AppButton } from "../../src/components/common/AppButton";
 import { PostCard } from "../../src/components/posts/PostCard";
 import { useAuth } from "../../src/context/AuthContext";
 import { COLORS } from "../../src/theme/colors";
 import { Post } from "../../src/types/types";
 
+// List of Cloudinary profile pictures
 const PROFILE_PICTURES = [
   "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar1.png",
   "https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1234567890/avatars/avatar2.png",
@@ -48,6 +51,7 @@ export default function ProfileScreen() {
     }
   }, [user]);
 
+  // Refresh posts when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadUserPosts();
@@ -64,7 +68,9 @@ export default function ProfileScreen() {
 
   const handleSelectPicture = async (pictureUrl: string) => {
     try {
-       setSelectedPicture(pictureUrl);
+      // TODO: Save the selected picture URL to Firebase user profile
+      // await updateUserProfile({ photoURL: pictureUrl });
+      setSelectedPicture(pictureUrl);
       setShowPicturePicker(false);
       Alert.alert("Success", "Profile picture updated!");
     } catch (error) {
@@ -145,6 +151,8 @@ export default function ProfileScreen() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
+
+      {/* Profile Picture Picker Modal */}
       <Modal
         visible={showPicturePicker}
         transparent
