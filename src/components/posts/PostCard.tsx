@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from 'date-fns'; // Used for friendly timestamp
+import { formatDistanceToNow } from 'date-fns';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { COLORS } from '../../theme/colors';
@@ -15,7 +15,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.author}>
-          {post.userName || post.userEmail}
+          {post.userName}
         </Text>
         
         <Text style={styles.timestamp}>
@@ -55,11 +55,11 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.textPrimary, 
+    color: COLORS.textPrimary,
   },
   timestamp: {
     fontSize: 12,
-    color: COLORS.textSecondary, 
+    color: COLORS.textSecondary,
   },
   image: {
     width: '100%',
