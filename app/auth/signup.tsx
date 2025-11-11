@@ -22,6 +22,7 @@ export default function SignUpScreen() {
     setLoading(true);
     try {
       await signup(values.email, values.password, values.displayName);
+      router.replace('/tabs');
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message.replace('Firebase: Error (auth/', '').replace(').', '').replace(/-/g, ' '));
     } finally {
