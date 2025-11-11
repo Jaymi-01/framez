@@ -40,32 +40,42 @@ export default function NewPostScreen() {
   };
 
   const handleShare = async () => {
-    if (!user) return; 
-    if (!text.trim() && !imageUri) {
-      Alert.alert('Hold On', 'You need to add text or an image to share a Frame!');
-      return;
-    }
+  if (!user) return;
+  if (!text.trim() && !imageUri) {
+    Alert.alert('Hold On', 'You need to add text or an image to share a Frame!');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await createPost(
+  setLoading(true);
+  try {
+    console.log("🚀 Starting post creation...");
+    
+    // Added a timeout wrapper
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+    );
+    
+    await Promise.race([
+      createPost(
         user.uid,
         user.displayName || user.email!,
         user.email!,
         text,
         imageUri || undefined
-      );
+      ),
+      timeoutPromise
+    ]);
 
-      Alert.alert('Success!', 'Your Frame has been shared!');
-      
-      router.back(); 
-    } catch (error) {
-      console.error('Post creation failed:', error);
-      Alert.alert('Share Failed', 'Could not upload your post. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("✅ Post created successfully!");
+    Alert.alert('Success!', 'Your Frame has been shared!');
+    router.back(); 
+  } catch (error) {
+    console.error('❌ Post creation failed:', error);
+    Alert.alert('Share Failed', error instanceof Error ? error.message : 'Could not upload your post. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
