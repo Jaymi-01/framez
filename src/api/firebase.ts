@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, User as FirebaseAuthUser, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { addDoc, collection, getDocs, getFirestore, orderBy, query, serverTimestamp, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import { Post } from '../types/types';
 
@@ -62,14 +62,11 @@ const uploadImage = async (uri: string): Promise<string> => {
 
     try {
         if (Platform.OS === 'web') {
-            // WEB FIX: Convert the blob URI into a Blob object for Cloudinary
             const response = await fetch(uri);
             const blob = await response.blob();
-            // Append the actual Blob object, which Cloudinary's API can read.
-            formData.append('file', blob);
+            formData.append('file', blob as any); 
 
         } else {
-            // MOBILE FIX: Use the reliable Base64 encoding method (requires FileSystem/legacy)
             const base64Image = await FileSystem.readAsStringAsync(uri, {
                 encoding: 'base64', 
             });
@@ -79,8 +76,7 @@ const uploadImage = async (uri: string): Promise<string> => {
         const response = await fetch(uploadUrl, {
             method: 'POST',
             body: formData,
-            headers: {
-            }
+            headers: {},
         });
 
         const data = await response.json();
@@ -150,7 +146,6 @@ export const fetchAllPosts = async (): Promise<Post[]> => {
     })) as Post[];
 };
 
-
 export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
     const postsRef = collection(db, 'posts');
     const q = query(postsRef, where('userId', '==', userId));
@@ -169,4 +164,52 @@ export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
     posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     return posts;
+};
+
+
+export const toggleLike = async (userId: string, postId: string, isLiked: boolean): Promise<void> => {
+    const likeRef = doc(db, 'likes', `${postId}_${userId}`);
+    
+    if (isLiked) {
+        await deleteDoc(likeRef);
+    } else {
+        await setDoc(likeRef, {
+            postId: postId,
+            userId: userId,
+            timestamp: serverTimestamp()
+        });
+    }
+};
+
+export const checkIsLiked = async (userId: string, postId: string): Promise<boolean> => {
+    const likeRef = doc(db, 'likes', `${postId}_${userId}`);
+    const docSnap = await getDoc(likeRef);
+    return docSnap.exists();
+};
+
+export const countPostLikes = async (postId: string): Promise<number> => {
+    const likesRef = collection(db, 'likes');
+    const q = query(likesRef, where('postId', '==', postId));
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+};
+
+export const countUserTotalLikes = async (userId: string): Promise<number> => {
+    const postsRef = collection(db, 'posts');
+    const postsQuery = query(postsRef, where('userId', '==', userId));
+    const postsSnapshot = await getDocs(postsQuery);
+    
+    if (postsSnapshot.empty) {
+        return 0;
+    }
+
+    let totalLikes = 0;
+    
+    for (const postDoc of postsSnapshot.docs) {
+        const postId = postDoc.id;
+        const likesCount = await countPostLikes(postId);
+        totalLikes += likesCount;
+    }
+
+    return totalLikes;
 };
