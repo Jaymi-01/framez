@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { fetchAllPosts } from '../../src/api/firebase';
 import { PostCard } from '../../src/components/posts/PostCard';
 import { COLORS } from '../../src/theme/colors';
 import { Post } from '../../src/types/types';
-// import { useAuth } from '../../src/context/AuthContext';
 
 export default function FeedScreen() { 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -23,9 +23,11 @@ export default function FeedScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+  useFocusEffect(
+    useCallback(() => {
+      loadPosts();
+    }, [loadPosts])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
