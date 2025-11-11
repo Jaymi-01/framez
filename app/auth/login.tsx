@@ -31,7 +31,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Image source={require('../../assets/images/framez-transparent.jpg')} style={styles.logo} resizeMode="contain" /> 
+      <Image source={require('../../assets/images/framez-transparent.png')} style={styles.logo} resizeMode="contain" /> 
       <Text style={styles.title}>Welcome to Framez</Text>
 
       <Formik

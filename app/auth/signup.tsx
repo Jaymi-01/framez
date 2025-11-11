@@ -33,7 +33,7 @@ export default function SignUpScreen() {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
-        <Image source={require('../../assets/images/framez-transparent.jpg')} style={styles.logo} resizeMode="contain" />
+        <Image source={require('../../assets/images/framez-transparent.png')} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>Create Your Framez Account</Text>
 
         <Formik

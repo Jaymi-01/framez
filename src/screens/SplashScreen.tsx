@@ -18,7 +18,7 @@ const SplashScreen = () => {
   return (
     <View style={styles.container}>
       <Animated.Image
-        source={require('../../assets/images/framez-transparent.jpg')}
+        source={require('../../assets/images/framez-transparent.png')}
         style={[styles.logo, { transform: [{ scale: scaleAnim }] }]}
         resizeMode="contain"
       />
