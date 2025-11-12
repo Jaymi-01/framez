@@ -136,6 +136,10 @@ framez/
 - View posts in chronological feed
 - See post author information with timestamps
 
+### Comments
+- Add comments
+- View comments in chronological order
+
 ### Profile
 - View your post count and likes
 - Customize profile picture from pre-selected avatars
@@ -190,7 +194,6 @@ npx expo export:web
 
 ## Future Enhancements 🚀
 
-- [ ] Comment system
 - [ ] Follow/unfollow users
 - [ ] Real-time notifications
 - [ ] Direct messaging
