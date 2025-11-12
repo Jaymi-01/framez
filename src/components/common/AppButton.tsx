@@ -7,13 +7,14 @@ interface AppButtonProps {
   onPress: () => void;
   isLoading?: boolean;
   style?: ViewStyle;
+  disabled?: boolean; 
 }
 
-export const AppButton: React.FC<AppButtonProps> = ({ title, onPress, isLoading = false, style }) => (
+export const AppButton: React.FC<AppButtonProps> = ({ title, onPress, isLoading = false, style, disabled = false }) => (
   <TouchableOpacity
-    style={[styles.button, style, isLoading && styles.disabledButton]}
+    style={[styles.button, style, (isLoading || disabled) && styles.disabledButton]}
     onPress={onPress}
-    disabled={isLoading}
+    disabled={isLoading || disabled} 
   >
     {isLoading ? (
       <ActivityIndicator color={COLORS.background} />
