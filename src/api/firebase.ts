@@ -1,27 +1,31 @@
-import * as FileSystem from 'expo-file-system/legacy';
 import Constants from 'expo-constants';
+import * as FileSystem from 'expo-file-system/legacy';
 import { initializeApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, User as FirebaseAuthUser, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import { Post } from '../types/types';
 
+const extra = Constants.expoConfig?.extra || {};
+
 const firebaseConfig = {
     apiKey: "AIzaSyDvEdnCw5K7mmJwC6GNje8-b1syHwge-5M", 
-    authDomain: Constants.expoConfig?.extra?.firebaseAuthDomain || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: Constants.expoConfig?.extra?.firebaseProjectId || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: Constants.expoConfig?.extra?.firebaseStorageBucket || process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: Constants.expoConfig?.extra?.firebaseMessagingSenderId || process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: Constants.expoConfig?.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+    authDomain: extra.firebaseAuthDomain || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: extra.firebaseProjectId || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: extra.firebaseStorageBucket || process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: extra.firebaseMessagingSenderId || process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: extra.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-const CLOUD_NAME = Constants.expoConfig?.extra?.cloudinaryCloudName || process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = Constants.expoConfig?.extra?.cloudinaryUploadPreset || "framez";
+const CLOUD_NAME = extra.cloudinaryCloudName || process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = extra.cloudinaryUploadPreset || "framez"; 
+
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
 
 export const registerUser = async (email: string, password: string, displayName: string): Promise<FirebaseAuthUser> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -87,6 +91,7 @@ const uploadImage = async (uri: string): Promise<string> => {
             const response = await fetch(uri);
             const blob = await response.blob();
             formData.append('file', blob as any); 
+
         } else {
             const base64Image = await FileSystem.readAsStringAsync(uri, {
                 encoding: 'base64', 
@@ -125,6 +130,7 @@ export const createPost = async (
     text: string, 
     imageUri?: string
 ): Promise<void> => {
+    
     let imageUrl: string | undefined;
 
     if (imageUri) {
@@ -186,6 +192,7 @@ export const fetchUserPosts = async (userId: string): Promise<Post[]> => {
     return posts;
 };
 
+
 export const toggleLike = async (userId: string, postId: string, isLiked: boolean): Promise<void> => {
     const likeRef = doc(db, 'likes', `${postId}_${userId}`);
     
@@ -231,4 +238,48 @@ export const countUserTotalLikes = async (userId: string): Promise<number> => {
     }
 
     return totalLikes;
+};
+
+export interface Comment {
+    id: string;
+    postId: string;
+    userId: string;
+    userName: string;
+    text: string;
+    timestamp: string;
+}
+
+export const addComment = async (postId: string, userId: string, userName: string, text: string): Promise<void> => {
+    const commentsRef = collection(db, 'comments');
+    await addDoc(commentsRef, {
+        postId,
+        userId,
+        userName,
+        text,
+        timestamp: serverTimestamp(),
+    });
+};
+
+export const fetchComments = async (postId: string): Promise<Comment[]> => {
+    const commentsRef = collection(db, 'comments');
+    const q = query(
+        commentsRef, 
+        where('postId', '==', postId), 
+        orderBy('timestamp', 'asc') 
+    );
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate().toISOString() || new Date().toISOString()
+    })) as Comment[];
+};
+
+
+export const countPostComments = async (postId: string): Promise<number> => {
+    const commentsRef = collection(db, 'comments');
+    const q = query(commentsRef, where('postId', '==', postId));
+    const snapshot = await getDocs(q);
+    return snapshot.size;
 };
