@@ -2,10 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { checkIsLiked, countPostLikes, toggleLike } from '../../api/firebase';
+import { checkIsLiked, countPostComments, countPostLikes, toggleLike } from '../../api/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../theme/colors';
 import { Post } from '../../types/types';
+import { CommentSection } from './CommentSection';
 
 interface PostCardProps {
   post: Post;
@@ -15,26 +16,31 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [commentCount, setCommentCount] = useState(0); 
   const [loading, setLoading] = useState(true);
+  const [showComments, setShowComments] = useState(false); 
 
   const timeAgo = formatDistanceToNow(new Date(post.timestamp), { addSuffix: true });
 
-  const updateLikeState = async () => {
+  const updatePostStats = async () => {
     if (!user) return;
     try {
       const liked = await checkIsLiked(user.uid, post.id);
       const count = await countPostLikes(post.id);
+      const comments = await countPostComments(post.id);
+
       setIsLiked(liked);
       setLikeCount(count);
+      setCommentCount(comments); 
     } catch (error) {
-      console.error("Error updating like state:", error);
+      console.error("Error updating post stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    updateLikeState();
+    updatePostStats();
   }, [user, post.id]);
 
   const handleLike = async () => {
@@ -55,6 +61,10 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
       setIsLiked(!newIsLiked);
       setLikeCount(likeCount); 
     }
+  };
+
+  const handleCommentCountChange = (newCount: number) => {
+    setCommentCount(newCount);
   };
 
   return (
@@ -79,21 +89,38 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
       <Text style={styles.text}>{post.text}</Text>
 
-      {/* Like Button and Count */}
-      <View style={styles.actionContainer}>
+      <View style={styles.actionRow}>
         {loading ? (
           <ActivityIndicator size="small" color={COLORS.primary} />
         ) : (
-          <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
-            <Ionicons 
-              name={isLiked ? "heart-sharp" : "heart-outline"} 
-              size={24} 
-              color={isLiked ? 'red' : COLORS.textSecondary} 
-            />
-            <Text style={styles.likeCountText}>{likeCount} Likes</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity onPress={handleLike} style={styles.actionButton}>
+              <Ionicons 
+                name={isLiked ? "heart-sharp" : "heart-outline"} 
+                size={24} 
+                color={isLiked ? 'red' : COLORS.textSecondary} 
+              />
+              <Text style={styles.countText}>{likeCount}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setShowComments(!showComments)} style={styles.actionButton}>
+              <Ionicons 
+                name="chatbubble-outline" 
+                size={24} 
+                color={COLORS.textSecondary} 
+              />
+              <Text style={styles.countText}>{commentCount}</Text>
+            </TouchableOpacity>
+          </>
         )}
       </View>
+
+      {showComments && (
+        <CommentSection 
+          postId={post.id} 
+          onCommentCountChange={handleCommentCountChange}
+        />
+      )}
 
       <View style={styles.divider} />
     </View>
@@ -103,7 +130,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
-    padding: 15,
+    padding: 0,
     marginBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.textSecondary + '20',
@@ -113,6 +140,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 15,
   },
   author: {
     fontSize: 16,
@@ -126,26 +154,26 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 300,
-    borderRadius: 8,
-    marginVertical: 10,
   },
   text: {
     fontSize: 15,
     color: COLORS.textPrimary,
+    paddingHorizontal: 15,
+    marginTop: 10,
     marginBottom: 10,
   },
-  actionContainer: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 15,
     paddingVertical: 5,
   },
-  likeButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 10,
-    paddingVertical: 5,
+    marginRight: 15,
   },
-  likeCountText: {
+  countText: {
     marginLeft: 5,
     fontSize: 14,
     color: COLORS.textPrimary,
@@ -154,6 +182,6 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: COLORS.textSecondary + '10',
-    marginTop: 15,
+    marginTop: 0,
   }
 });
